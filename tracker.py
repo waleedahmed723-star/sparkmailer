@@ -44,6 +44,13 @@ def init_db():
 
 def log_open(email, campaign, job_id, ua, ip):
     with sqlite3.connect(DB_FILE) as conn:
+        # Deduplicate: skip if same email+job opened within last 30 minutes
+        recent = conn.execute(
+            "SELECT id FROM opens WHERE email=? AND job_id=? AND opened_at >= datetime('now','-30 minutes') LIMIT 1",
+            (email, job_id or "")
+        ).fetchone()
+        if recent:
+            return  # Already counted within 30-min window
         conn.execute(
             "INSERT INTO opens (email,campaign,job_id,user_agent,ip,opened_at) VALUES (?,?,?,?,?,?)",
             (email, campaign, job_id or "", ua or "", ip or "", datetime.now().isoformat())
@@ -54,15 +61,15 @@ def get_opens(job_id=None, campaign=None):
     with sqlite3.connect(DB_FILE) as conn:
         if job_id:
             rows = conn.execute(
-                "SELECT email,COUNT(*) as cnt,MAX(opened_at),job_id,MAX(user_agent) FROM opens WHERE job_id=? GROUP BY email",
+                "SELECT email,COUNT(DISTINCT strftime('%Y-%m-%d %H',opened_at)) as cnt,MAX(opened_at),job_id,MAX(user_agent) FROM opens WHERE job_id=? GROUP BY email",
                 (job_id,)).fetchall()
         elif campaign:
             rows = conn.execute(
-                "SELECT email,COUNT(*) as cnt,MAX(opened_at),job_id,MAX(user_agent) FROM opens WHERE campaign=? GROUP BY email",
+                "SELECT email,COUNT(DISTINCT strftime('%Y-%m-%d %H',opened_at)) as cnt,MAX(opened_at),job_id,MAX(user_agent) FROM opens WHERE campaign=? GROUP BY email",
                 (campaign,)).fetchall()
         else:
             rows = conn.execute(
-                "SELECT email,COUNT(*) as cnt,MAX(opened_at),job_id,MAX(user_agent) FROM opens GROUP BY email,job_id"
+                "SELECT email,COUNT(DISTINCT strftime('%Y-%m-%d %H',opened_at)) as cnt,MAX(opened_at),job_id,MAX(user_agent) FROM opens GROUP BY email,job_id"
             ).fetchall()
     return [{"email":r[0],"count":r[1],"last_opened":r[2],"job_id":r[3],"ua":r[4] or ""} for r in rows]
 
