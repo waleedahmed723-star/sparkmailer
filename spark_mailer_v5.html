@@ -1212,7 +1212,15 @@ function saveData() {
   localStorage.setItem('sk5_settings',  JSON.stringify(settings));
   localStorage.setItem('sk5_activity',  JSON.stringify(activityLog.slice(0,200)));
 }
-function getServerUrl() { return (settings.serverUrl || SERVER_DEFAULT).replace(/\/$/, ''); }
+function getServerUrl() {
+  // If a custom server URL is saved in settings, use it
+  if (settings.serverUrl && !settings.serverUrl.includes('localhost')) return settings.serverUrl.replace(/\/$/, '');
+  // Auto-detect: if app is served from Railway/cloud (not localhost), use same origin
+  if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+    return window.location.origin;
+  }
+  return (settings.serverUrl || SERVER_DEFAULT).replace(/\/$/, '');
+}
 function apiHeaders() {
   const h = { 'Content-Type': 'application/json' };
   if (authToken) h['Authorization'] = 'Bearer ' + authToken;
