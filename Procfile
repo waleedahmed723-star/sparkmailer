@@ -1,1 +1,1 @@
-web: python spark_server.py
+web: python tracker.py
