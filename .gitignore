@@ -1,0 +1,4 @@
+spark_data.db
+*.pyc
+__pycache__/
+.env
