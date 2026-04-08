@@ -2,7 +2,7 @@
 ║         SPARK MAILER v5 — GITHUB/RAILWAY FILES          ║
 ╚══════════════════════════════════════════════════════════╝
 
-THESE FILES GO ON GITHUB (waleedahmed723-star/sparkmailer)
+THESE FILES GO ON GITHUB (waleedahmed723-star/sparkmailer) 
 
 CURRENT GITHUB REPO STATUS:
   DELETE these files from GitHub if they exist:
